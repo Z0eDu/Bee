@@ -1,0 +1,16 @@
+loading run-64__2019-05-20_17-29-41/top11_s1.jpg
+ 0                             init        0.014000 ms        0.014000 ms
+ 1                         decimate        3.158000 ms        3.172000 ms
+ 2                       blur/sharp        0.003000 ms        3.175000 ms
+ 3                        threshold       11.723000 ms       14.898000 ms
+ 4                        unionfind       24.888000 ms       39.786000 ms
+ 5                    make clusters       49.073000 ms       88.859000 ms
+ 6            fit quads to clusters       13.433000 ms      102.292000 ms
+ 7                            quads        0.317000 ms      102.609000 ms
+ 8                decode+refinement        1.452000 ms      104.061000 ms
+ 9                        reconcile        0.042000 ms      104.103000 ms
+10                     debug output        0.002000 ms      104.105000 ms
+11                          cleanup        0.158000 ms      104.263000 ms
+hamm     0     0     0     0     0     0     0     0     0     0      104.249     3
+Summary
+hamm     0     0     0     0     0     0     0     0     0     0      104.249     3

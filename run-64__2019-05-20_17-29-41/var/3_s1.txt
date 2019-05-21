@@ -1,0 +1,17 @@
+loading run-64__2019-05-20_17-29-41/top3_s1.jpg
+detection   0: id (36x11)-13  , hamming 0, margin   20.548
+ 0                             init        0.013000 ms        0.013000 ms
+ 1                         decimate        4.198000 ms        4.211000 ms
+ 2                       blur/sharp        0.009000 ms        4.220000 ms
+ 3                        threshold       11.472000 ms       15.692000 ms
+ 4                        unionfind       24.545000 ms       40.237000 ms
+ 5                    make clusters       44.806000 ms       85.043000 ms
+ 6            fit quads to clusters       18.252000 ms      103.295000 ms
+ 7                            quads        0.513000 ms      103.808000 ms
+ 8                decode+refinement        2.174000 ms      105.982000 ms
+ 9                        reconcile        0.024000 ms      106.006000 ms
+10                     debug output        0.002000 ms      106.008000 ms
+11                          cleanup        0.005000 ms      106.013000 ms
+hamm     1     0     0     0     0     0     0     0     0     0      106.000     4
+Summary
+hamm     1     0     0     0     0     0     0     0     0     0      106.000     4

@@ -1,0 +1,16 @@
+loading run-60__2019-05-20_17-08-08/top58_s1.jpg
+ 0                             init        0.015000 ms        0.015000 ms
+ 1                         decimate        3.140000 ms        3.155000 ms
+ 2                       blur/sharp        0.001000 ms        3.156000 ms
+ 3                        threshold       10.503000 ms       13.659000 ms
+ 4                        unionfind       19.016000 ms       32.675000 ms
+ 5                    make clusters       21.845000 ms       54.520000 ms
+ 6            fit quads to clusters        3.247000 ms       57.767000 ms
+ 7                            quads        0.264000 ms       58.031000 ms
+ 8                decode+refinement        0.710000 ms       58.741000 ms
+ 9                        reconcile        0.042000 ms       58.783000 ms
+10                     debug output        0.002000 ms       58.785000 ms
+11                          cleanup        0.003000 ms       58.788000 ms
+hamm     0     0     0     0     0     0     0     0     0     0       58.773     1
+Summary
+hamm     0     0     0     0     0     0     0     0     0     0       58.773     1
