@@ -11,7 +11,7 @@ import json
 from pygame.locals import *
 from picamera import PiCamera
 
-
+'''Needed to use the PI screen with the gui display'''
 #piTFT environment variables
 os.putenv('SDL_VIDEODRIVER', 'fbcon')
 os.putenv('SDL_FBDEV', '/dev/fb1')
@@ -23,8 +23,7 @@ os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 Helper functions
 '''
 
-
-
+#Bee class should be removed
 class Bee(object) :
     def __init__(self):
         entries = []
@@ -85,6 +84,7 @@ font = pygame.font.Font(pygame.font.get_default_font(), 12)
 white = 255, 255, 255
 black = 0, 0, 0
 color = 127, 15, 111
+
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(19, GPIO.OUT)     #ring light 1
 GPIO.setup(13, GPIO.OUT)     #ring light 2
@@ -100,9 +100,14 @@ Setup Variables
 
 '''set up camera stuff'''
 camera=PiCamera()
+
 camera.resolution = (1280,960)
 camera.resolution = (640,480)
 camera.shutter_speed=100
+camera.start_preview()
+#amera.brightness=53
+#camera.contrast=50
+camera.stop_preview()
 camera.exposure_mode='sports'
 #camera.zoom=(.25,.25,.5,.5)
 
@@ -210,6 +215,12 @@ GPIO.add_event_detect(27, GPIO.FALLING, callback=GPIO27_callback, bouncetime=300
 GPIO.add_event_detect(17, GPIO.FALLING, callback=GPIO17_callback, bouncetime=300)
 
 while(not quit_program):
+    '''
+    Turn on lights
+    '''
+    #GPIO.output(19, GPIO.HIGH)
+    #GPIO.output(13, GPIO.HIGH)
+    
 
     '''write/flush files'''
     if t.time()-last_flush > flush_period:
@@ -247,7 +258,7 @@ while(not quit_program):
 
             pics_taken.append(num_name)
             fh_time_log.write(num_name +'\t'+ datetime.datetime.today().isoformat() + '\n')
-            
+            '''Change here to use different tag family. Currently tag36h11'''
             os.system("./apriltag_demo -f tag36h11 " + save_prefix +"top" + num_name + ".jpg > " + save_prefix + 'var/'+num_name + ".txt & ")
             file_call='./file_analyze '  + num_name + ' ' + save_prefix[:-1] + ' & ' 
             print(file_call)
@@ -256,8 +267,9 @@ while(not quit_program):
             print("Elapsed Time for capture + 'detection': ", str(t.time()-start_time))
             t.sleep(.2)
         else:
-            GPIO.output(19, GPIO.LOW)
-            GPIO.output(13, GPIO.LOW)
+            '''Don't turn off lights'''
+            GPIO.output(19, GPIO.HIGH)
+            GPIO.output(13, GPIO.HIGH)
     if len(pics_taken) != 0 : 
         pic = pics_taken[0]
         print(os.path.exists(save_prefix+"var/done_" + pic + ".txt"), "Waiting for 'done_' file")
