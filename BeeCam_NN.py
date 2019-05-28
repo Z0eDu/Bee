@@ -10,6 +10,9 @@ import numpy as np
 import json
 from pygame.locals import *
 from picamera import PiCamera
+import file_analyze as ana
+import threading
+
 
 '''Needed to use the PI screen with the gui display'''
 #piTFT environment variables
@@ -23,11 +26,7 @@ os.putenv('SDL_MOUSEDEV', '/dev/input/touchscreen')
 Helper functions
 '''
 
-#Bee class should be removed
-class Bee(object) :
-    def __init__(self):
-        entries = []
-        exits = []
+
 
 '''Dictionary for bee enter/exit events'''
 bee_log_dict={-1: {'entries':[], 'exits': []} }
@@ -73,7 +72,6 @@ def format_folder(dt):
     pref = usb_dir + 'run-' + str(get_run_count()) +pref 
     os.mkdir(pref)
     os.mkdir(pref + '/var')
-
     return pref + '/'
 
 size = width, height = 320, 240
@@ -92,7 +90,8 @@ GPIO.setup(27, GPIO.IN, pull_up_down=GPIO.PUD_UP)   #bailout button
 GPIO.setup(17, GPIO.IN, pull_up_down=GPIO.PUD_UP)   #pause/start button
 GPIO.setup(5, GPIO.IN, pull_up_down=GPIO.PUD_UP)    #beam sensor 1
 GPIO.setup(26, GPIO.IN, pull_up_down=GPIO.PUD_UP)   #beam sensor 2
-
+GPIO.output(19, GPIO.HIGH)
+GPIO.output(13, GPIO.HIGH)
 
 '''
 Setup Variables
@@ -104,10 +103,7 @@ camera=PiCamera()
 camera.resolution = (1280,960)
 camera.resolution = (640,480)
 camera.shutter_speed=100
-camera.start_preview()
-#amera.brightness=53
-#camera.contrast=50
-camera.stop_preview()
+
 camera.exposure_mode='sports'
 #camera.zoom=(.25,.25,.5,.5)
 
@@ -119,25 +115,15 @@ bee_log_dict['start_time_iso']=datetime.datetime.today().isoformat()
 save_prefix=format_folder(datetime.datetime.today())
 
 
-'''File Names'''
-BEE_LOG_FILE='BeeLog.json'
-fh_time_log=open(save_prefix+ 'ImgTimes.log','w')
-fh_id_log =  open(save_prefix  + 'ImgID.log'   ,'w')
-
-'''Variables for occansinally flushing files'''
-last_flush=start_time
-flush_period=30
-
-
 sensor1 = False     #exiting sensor
 sensor2 = False     #entering sensor
 current_time = 0.0
 hasPollen = False
 cnt = 0
 num_name = ""
-delay = 500         #minimum 100, maximum 6000, steps of 25
+delay = 100         #minimum 100, maximum 6000, steps of 25
 ss = 100            #100 is minimum already, maximum 1000, steps of 25
-tag = -1
+tag=[-1]
 
 
 global paused
@@ -169,42 +155,10 @@ for x in range(50) :
 def GPIO27_callback(channel):
     global quit_program
     quit_program = True
-
-    '''Wait to finish processing other files''' 
-    while len(pics_taken) != 0 : 
-        pic =  pics_taken[0]
-        print(os.path.exists(save_prefix+"var/done_" + pic + ".txt"), "Yo, I'm in an GPIO callback")
-        if os.path.exists(save_prefix+"var/done_" + pic + ".txt") :
-            pics_taken.pop(0)
-            f = open(save_prefix + "var/done_" + pic + ".txt",'r')
-            line = f.readline()
-            f.close()
-            if not "-1" in line :
-                tag = int(line[4:])
-            else:
-                tag=-1
-                
-            fh_id_log.write(num_name + '\t' + str(tag) + '\n')                
-            add_bee_event(tag,t.time()-start_time,'s1' in pic)
-
-                    
-    with open(save_prefix + BEE_LOG_FILE,'w+') as fh:
-        json.dump(bee_log_dict,fh)
-
-    '''
-    file = open(save_prefix+"BeeData.txt", "w+")
-    file.write("Bee Data: \n")
-    for x in range(50):
-        file.write("Bee %d:\n" %x)
-        bee = bees[x]  
-        file.write("Entries: " +  str(bee.entries) + "\n")
-        file.write("Exits: " + str(bee.exits) + "\n")
-        file.write("\n")
-    file.close()
-    '''
+    for i in pics_taken:
+        i.join()
     
-    GPIO.output(19, GPIO.LOW)
-    GPIO.output(13, GPIO.LOW)
+
     GPIO.cleanup()
 
 def GPIO17_callback(channel):
@@ -213,90 +167,79 @@ def GPIO17_callback(channel):
 
 GPIO.add_event_detect(27, GPIO.FALLING, callback=GPIO27_callback, bouncetime=300)
 GPIO.add_event_detect(17, GPIO.FALLING, callback=GPIO17_callback, bouncetime=300)
-
+sensor1,sensor2=False,False
+sensor_on_times=0
+enter,exitt=False,False
 while(not quit_program):
-    '''
-    Turn on lights
-    '''
-    #GPIO.output(19, GPIO.HIGH)
-    #GPIO.output(13, GPIO.HIGH)
     
+    if (not paused): 
+        pre_sensor1,pre_sensor2=sensor1,sensor2
+        sensor1,sensor2=not GPIO.input(5),not GPIO.input(26)
 
-    '''write/flush files'''
-    if t.time()-last_flush > flush_period:
-        last_flush=t.time()
-        fh_time_log.flush()
-        fh_id_log.flush()
-        with open(save_prefix + BEE_LOG_FILE,'w+') as fh:
-            json.dump(bee_log_dict,fh)
+        ''' find falling edge'''
+        if(not sensor1 and pre_sensor1):
+            sensor_on_times+=1
+            enter=True
+            leave=False
+        elif (not sensor2 and pre_sensor2):
+            sensor_on_times+=1
+            leave=True
+            enter=False
         
-    
-    
-    if (not paused):    
-        sensor1 = not GPIO.input(5)
-        sensor2 = not GPIO.input(26)
-        if (sensor1 or sensor2):
+        '''assum only one bee right now. either go back to triger 1 twice or go through '''
+        if(sensor_on_times==2):
+            sensor_on_times=0
+            for i in pics_taken:
+                i.join()
+            pics_taken=[]
+            
+        '''continously take pictures'''
+        if (sensor_on_times==1):
+            
+            print 'enter','leave'
+            print enter,leave
             start_time=t.time()
-            GPIO.output(19, GPIO.HIGH)
-            GPIO.output(13, GPIO.HIGH)
-            current_time = t.gmtime(t.time())
-            cnt = cnt + 1
+            
 
-            if(sensor1):
+            pre_num_name=num_name
+            cnt = cnt + 1
+            print('cnt',cnt)
+
+            if(enter):
                 num_name = str(cnt) + "_s1"
-            else: 
+            if(leave): 
                 num_name = str(cnt) + "_s2" 
-            print("num_name = " + num_name)
 
             time_pre_image=t.time()
-            #delay=1
-            #os.system("sudo raspistill -t " + str(delay) + " -ex sports -ss " + str(ss) + "-roi (0.1,0.3,0.8.,0.4) -o top" + num_name + ".jpg")
-            #os.system("sudo raspistill -w 1280 -h 960 -t " + str(delay) + " -ex sports -ss " + str(ss) + " -n -o top" + num_name + ".jpg")
+            
+  
             t.sleep(1.0*delay/1000)
+            
             camera.capture(save_prefix+"top" + num_name + ".jpg")
+            
             print("Elapsed Time for capture: ", str(t.time()-time_pre_image))
 
-            pics_taken.append(num_name)
-            fh_time_log.write(num_name +'\t'+ datetime.datetime.today().isoformat() + '\n')
+        
+            
+            
             '''Change here to use different tag family. Currently tag36h11'''
-            os.system("./apriltag_demo -f tag36h11 " + save_prefix +"top" + num_name + ".jpg > " + save_prefix + 'var/'+num_name + ".txt & ")
-            file_call='./file_analyze '  + num_name + ' ' + save_prefix[:-1] + ' & ' 
-            print(file_call)
-            os.system(file_call)
+            
+            thread=threading.Thread(target=ana.analyze,args=(cnt,pre_num_name,num_name,save_prefix,bee_log_dict,start_time,tag))
+            print("back from threading")
+            pics_taken.append(thread)
+            
+            thread.start()
+            '''
+            test and display tag
+            print("start")
+            thread.join()
+            '''
             top = save_prefix + "top" + num_name + ".jpg"
-            print("Elapsed Time for capture + 'detection': ", str(t.time()-start_time))
+            
+           
             t.sleep(.2)
-        else:
-            '''Don't turn off lights'''
-            GPIO.output(19, GPIO.HIGH)
-            GPIO.output(13, GPIO.HIGH)
-    if len(pics_taken) != 0 : 
-        pic = pics_taken[0]
-        print(os.path.exists(save_prefix+"var/done_" + pic + ".txt"), "Waiting for 'done_' file")
-        if os.path.exists(save_prefix+"var/done_" + pic + ".txt") :
-            pics_taken.pop(0)
-            f = open(save_prefix + "var/done_" + pic + ".txt",'r')
-            line = f.readline()
-            f.close()
-            if not "-1" in line :
-                tag = int(line[4:])
-            else:
-                tag=-1
 
-            print(str(tag))
-
-            fh_id_log.write(num_name + '\t' + str(tag) + '\n')    
-            add_bee_event(tag,t.time()-start_time,'s1' in pic)
-
-            '''
-                if "s1" in pic : 
-                    #bees[tag].entries.append(str(t.time()))
-                    add_bee_event(tag,t.time()-start_time,'s1' in pic)
-                else:
-                    bees[tag].exits.append(str(t.time()))
-            '''
-                    
-
+            
 
     
    
@@ -350,7 +293,7 @@ while(not quit_program):
     tagid_r.left = 5
     tagid_r.top = 10
 
-    idNum = font.render(str(tag), True, white)
+    idNum = font.render(str(tag[0]), True, white)
     idNum_r = idNum.get_rect()
     idNum_r.left = 5
     idNum_r.top = 25 
@@ -392,8 +335,6 @@ while(not quit_program):
     
     pygame.display.flip()
 
-os.system('sync')
-fh_id_log.close()
-fh_time_log.close()
+
 print('Bye bye!')
      

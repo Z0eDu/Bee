@@ -1,2 +1,0 @@
-#!/bin/bash
-sudo python file_analyze.py $1 $2 &
