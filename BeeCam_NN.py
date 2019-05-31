@@ -170,6 +170,7 @@ GPIO.add_event_detect(17, GPIO.FALLING, callback=GPIO17_callback, bouncetime=300
 sensor1,sensor2=False,False
 sensor_on_times=0
 enter,exitt=False,False
+start_time=t.time()
 while(not quit_program):
     
     if (not paused): 
@@ -198,7 +199,7 @@ while(not quit_program):
             
             print 'enter','leave'
             print enter,leave
-            start_time=t.time()
+            
             
 
             pre_num_name=num_name
@@ -212,8 +213,8 @@ while(not quit_program):
 
             time_pre_image=t.time()
             
-  
             t.sleep(1.0*delay/1000)
+            
             
             camera.capture(save_prefix+"top" + num_name + ".jpg")
             
@@ -231,13 +232,15 @@ while(not quit_program):
             thread.start()
             '''
             test and display tag
-            print("start")
-            thread.join()
             '''
+            #print("start")
+            #thread.join()
+            
             top = save_prefix + "top" + num_name + ".jpg"
             
-           
             t.sleep(.2)
+
+           
 
             
 
@@ -251,9 +254,9 @@ while(not quit_program):
     image1_rect = image1.get_rect()
     image1_rect = image1_rect.move(80, 10)
 
+    delay_up_button = pygame.draw.rect(screen, white, [180, 200, 50, 30])
     ss_up_button = pygame.draw.rect(screen, white, [20, 200, 50, 30])
     ss_down_button = pygame.draw.rect(screen, white, [90, 200, 50, 30])
-    delay_up_button = pygame.draw.rect(screen, white, [180, 200, 50, 30])
     delay_down_button = pygame.draw.rect(screen, white, [250, 200, 50, 30])
  
     

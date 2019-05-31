@@ -17,8 +17,8 @@ def add_bee_event(log,bee_ID=-1,event_time=0,dir_out=True):
 def analyze(cnt,pre_num_name,num_name,save_prefix,bee_log_dict,start_time,tag):
     print('here')
     BEE_LOG_FILE='BeeLog.json'
-    fh_time_log=open(save_prefix+ 'ImgTimes.log','w')
-    fh_id_log =  open(save_prefix  + 'ImgID.log'   ,'w')
+    fh_time_log=open(save_prefix+ 'ImgTimes.log','a')
+    fh_id_log =  open(save_prefix  + 'ImgID.log'   ,'a')
     fh_time_log.write(num_name +'\t'+ datetime.datetime.today().isoformat() + '\n')
     os.system("./apriltag_demo -f tag36h11 " + save_prefix +"top" + num_name + ".jpg > " + save_prefix + 'var/'+num_name + ".txt & ")   
     print("Running file_analyze:"  + save_prefix + num_name)
@@ -68,6 +68,6 @@ def analyze(cnt,pre_num_name,num_name,save_prefix,bee_log_dict,start_time,tag):
                 pre_tag[0] = int(line[indx+1])
         
         
-        if pre_tag[0]==-1:
-            os.system("sudo rm "+save_prefix+"top" + pre_num_name + ".jpg")
+       # if pre_tag[0]==-1:
+       #     os.system("sudo rm "+save_prefix+"top" + pre_num_name + ".jpg")
     os.system('sync')
