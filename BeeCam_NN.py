@@ -98,14 +98,19 @@ Setup Variables
 '''
 
 '''set up camera stuff'''
-camera=PiCamera()
 
-camera.resolution = (1280,960)
-camera.resolution = (640,480)
-camera.shutter_speed=100
 
-camera.exposure_mode='sports'
-#camera.zoom=(.25,.25,.5,.5)
+camera = PiCamera(resolution=(960,600), framerate=50)
+camera.iso = 250
+t.sleep(2)
+
+
+camera.exposure_mode='off'
+camera.shutter_speed = camera.exposure_speed
+camera.exposure_mode = 'off'
+g = camera.awb_gains
+camera.awb_mode = 'off'
+camera.awb_gains = g
 
 '''store local time'''
 start_time=t.time()
@@ -238,7 +243,7 @@ while(not quit_program):
             
             top = save_prefix + "top" + num_name + ".jpg"
             
-            t.sleep(.2)
+           # t.sleep(.2)
 
            
 

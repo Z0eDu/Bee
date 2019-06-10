@@ -7,12 +7,18 @@ import json
 def add_bee_event(log,bee_ID=-1,event_time=0,dir_out=True):
     if not bee_ID in log.keys():
         log[bee_ID]={'entries':[], 'exits': []} 
-
+        
     if dir_out:
         log[bee_ID]['entries'].append(event_time)
+        if len(log[bee_ID]['entries'])>1:
+             if((event_time-log[bee_ID]['entries'][len(log[bee_ID]['entries'])-2])<2):
+                 del log[bee_ID]['entries'][len(log[bee_ID]['entries'])-2]
+                 
     else:
-        log[bee_ID]['exits'].append(event_time)
         
+        if len(log[bee_ID]['entries'])>1:
+             if((event_time-log[bee_ID]['entries'][len(log[bee_ID]['entries'])-2])>2):
+                 log[bee_ID]['exits'].append(event_time)
 
 def analyze(cnt,pre_num_name,num_name,save_prefix,bee_log_dict,start_time,tag):
     print('here')
@@ -67,7 +73,7 @@ def analyze(cnt,pre_num_name,num_name,save_prefix,bee_log_dict,start_time,tag):
             else : 
                 pre_tag[0] = int(line[indx+1])
         
-        
+    
        # if pre_tag[0]==-1:
        #     os.system("sudo rm "+save_prefix+"top" + pre_num_name + ".jpg")
     os.system('sync')
