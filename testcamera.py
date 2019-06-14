@@ -14,7 +14,7 @@ usingPiCamera = True
 frameSize = (320, 240)
  
 # Initialize mutithreading the video stream.
-vs = VideoStream(src=0, usePiCamera=usingPiCamera, resolution=frameSize,
+vs = VideoStream(src=0, usePiCamera=usingPiCamera, resolution=(960,720),
 		framerate=32).start()
 # Allow the camera to warm up.
 time.sleep(2.0)

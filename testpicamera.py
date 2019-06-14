@@ -17,4 +17,5 @@ camera.awb_gains = g
 # Finally, take several photos with the fixed settings
 print(datetime.datetime.now())
 camera.capture_sequence(['image%02d.jpg' % i for i in range(5)])
+camera
 print(datetime.datetime.now())

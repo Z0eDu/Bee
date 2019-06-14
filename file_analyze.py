@@ -2,7 +2,7 @@ import os
 import time as t
 import datetime
 import json
-
+import serial
 
 def add_bee_event(log,bee_ID=-1,event_time=0,dir_out=True):
     if not bee_ID in log.keys():
@@ -20,7 +20,7 @@ def add_bee_event(log,bee_ID=-1,event_time=0,dir_out=True):
              if((event_time-log[bee_ID]['entries'][len(log[bee_ID]['entries'])-2])>2):
                  log[bee_ID]['exits'].append(event_time)
 
-def analyze(cnt,pre_num_name,num_name,save_prefix,bee_log_dict,start_time,tag):
+def analyze(cnt,pre_num_name,num_name,save_prefix,bee_log_dict,start_time,tag,ser):
     print('here')
     BEE_LOG_FILE='BeeLog.json'
     fh_time_log=open(save_prefix+ 'ImgTimes.log','a')
@@ -73,7 +73,10 @@ def analyze(cnt,pre_num_name,num_name,save_prefix,bee_log_dict,start_time,tag):
             else : 
                 pre_tag[0] = int(line[indx+1])
         
-    
-       # if pre_tag[0]==-1:
-       #     os.system("sudo rm "+save_prefix+"top" + pre_num_name + ".jpg")
+        
+        if pre_tag[0]==-1:
+            #os.system("sudo rm "+save_prefix+"top" + pre_num_name + ".jpg")      
+            print(ser.write(str(pre_num_name)+'\n'))
+            print('send')
+            
     os.system('sync')
